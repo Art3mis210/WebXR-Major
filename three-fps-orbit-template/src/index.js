@@ -151,22 +151,6 @@ const initThreeJS = async () => {
     //add VRButton to scene
     document.body.appendChild( VRButton.createButton(renderer));
 
-    
-
-    controller1 = SceneSetup.Controller(renderer,scene, 0);
-    controller2 = SceneSetup.Controller(renderer, scene, 1);
-    Player.position.y=8;
-
-    
-
-    VRRaycaster=new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(),0, 50);
-
-    controller1.addEventListener('selectstart', onSelectStartControllerOne);
-    controller1.addEventListener('selectend',onSelectEndControllerOne);
-
-    controller2.addEventListener('selectstart', onSelectStartControllerTwo);
-    controller2.addEventListener('selectend', onSelectEndControllerTwo);
-
     scene.add(Player);
 
     /* Configure renderer */
@@ -194,12 +178,27 @@ const initThreeJS = async () => {
     light();
     skybox();
     addFloor();
-    //SpawnCubes(200,200,40);
+    SetupVRControllers();
     
 const listener = new THREE.AudioListener();
 camera.add(listener);
 
 };
+
+function SetupVRControllers()
+{
+    controller1 = SceneSetup.Controller(renderer,scene, 0);
+    controller2 = SceneSetup.Controller(renderer, scene, 1);
+    Player.position.y=8;
+
+    VRRaycaster=new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(),0, 50);
+
+    controller1.addEventListener('selectstart', onSelectStartControllerOne);
+    controller1.addEventListener('selectend',onSelectEndControllerOne);
+
+    controller2.addEventListener('selectstart', onSelectStartControllerTwo);
+    controller2.addEventListener('selectend', onSelectEndControllerTwo);
+}
 
 
 function skybox(){
@@ -296,10 +295,6 @@ function setInputKeys(){
 }
 
 let floor;
-let sphere;
-let sphereBody;
-//const physicsWorld=new CANNON.World({gravity: new CANNON.Vec3(0,-9.82,0),});
-let cannonDebugger;
 
 function addFloor(){
     raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, -20, 0 ), 0, 10 );
@@ -313,22 +308,6 @@ function addFloor(){
     floor.layers.enable(1);
     scene.add( floor );
     
-    const radius =1;
-
-    const sphereGeo=new THREE.SphereGeometry(radius);
-    const material=new THREE.MeshNormalMaterial();
-    sphere = new THREE.Mesh(sphereGeo,material);
-    scene.add(sphere);
-
-    const groundBody = new CANNON.Body({type: CANNON.Body.STATIC,shape: new CANNON.Plane(),});
-    groundBody.quaternion.setFromEuler(-Math.PI/2,0,0);
-    physicsWorld.addBody(groundBody);
-
-    
-    sphereBody = new CANNON.Body({mass: 5,shape: new CANNON.Sphere(radius),});
-    sphereBody.position.set(0,20,0);
-    physicsWorld.addBody(sphereBody);
-    cannonDebugger=new CannonDebugger(scene,physicsWorld,{});
 
 }
 
@@ -465,12 +444,6 @@ function TeleportPlayer(Controller)
 
 const animate = () => {
     renderer.setAnimationLoop(animate);
-    
-    physicsWorld.fixedStep();
-    cannonDebugger.update();
-    sphere.position.copy(sphereBody.position)
-    //sphere.position.Set(sphereBody.position.x,sphereBody.position.y,sphereBody.position.z);
-    //sphere.rotation.set(sphereBody.quaternion);
 
     ThreeMeshUI.update();
    
@@ -481,22 +454,7 @@ const animate = () => {
     renderer.render(scene, camera);
    
 };
-function SpawnCubes(AreaWidth,AreaLength,spacing)
- {
-    const geometry = new THREE.BoxGeometry( 5, 5, 5 );
-    const material = new THREE.MeshBasicMaterial( {color: 'blue'} );
-    for(let l=-AreaLength/2;l<=AreaLength/2;l+=spacing)
-    {
-        for(let w=-AreaWidth/2;w<=AreaWidth/2;w+=spacing)
-        {
 
-            const cube = new THREE.Mesh( geometry, material );
-            scene.add( cube );
-            cube.position.set(w,2,l);
-            cube.layers.enable(1);
-        }
-    }
- }
 
 
 /* Run */
