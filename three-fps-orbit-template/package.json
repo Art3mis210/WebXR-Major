@@ -65,6 +65,7 @@
         "dat.gui": "^0.7.9",
         "three": "0.145",
         "three-gltf-loader": "^1.111.0",
-        "three-mesh-ui": "^6.5.2"
+        "three-mesh-ui": "^6.5.2",
+        "three-pathfinding": "^1.1.0"
     }
 }

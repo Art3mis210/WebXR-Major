@@ -14,6 +14,8 @@ import * as dat from 'dat.gui';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger';
+import { SetupVRControllers } from './VRControl';
+import { initializeNavmesh } from './Navmesh';
 
 /* Define DOM elements */
 const rootElement = document.querySelector('#root');
@@ -27,9 +29,9 @@ export let Player=new THREE.Object3D();
 
 const objects = [];
 
-let VRRaycaster;
 
 let raycaster;
+let floor;
 
 let moveForward = false;
 let moveBackward = false;
@@ -178,53 +180,41 @@ const initThreeJS = async () => {
     light();
     skybox();
     addFloor();
-    SetupVRControllers();
+    SetupVRControllers(Player,scene,renderer,SceneSetup,floor);
+    
     
 const listener = new THREE.AudioListener();
 camera.add(listener);
 
 };
 
-function SetupVRControllers()
-{
-    controller1 = SceneSetup.Controller(renderer,scene, 0);
-    controller2 = SceneSetup.Controller(renderer, scene, 1);
-    Player.position.y=8;
 
-    VRRaycaster=new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(),0, 50);
-
-    controller1.addEventListener('selectstart', onSelectStartControllerOne);
-    controller1.addEventListener('selectend',onSelectEndControllerOne);
-
-    controller2.addEventListener('selectstart', onSelectStartControllerTwo);
-    controller2.addEventListener('selectend', onSelectEndControllerTwo);
-}
 
 
 function skybox(){
     
     let materialArray = [];
-textureLoader = new TextureLoader();
-let texture_ft = textureLoader.load('skybox/bay_ft.jpg');
-let texture_bk = textureLoader.load('skybox/bay_bk.jpg');
-let texture_up = textureLoader.load('skybox/bay_up.jpg');
-let texture_dn = textureLoader.load('skybox/bay_dn.jpg');
-let texture_rt = textureLoader.load('skybox/bay_rt.jpg');
-let texture_lf = textureLoader.load('skybox/bay_lf.jpg');
-  
-materialArray.push(new THREE.MeshBasicMaterial( { map: texture_ft }));
-materialArray.push(new THREE.MeshBasicMaterial( { map: texture_bk }));
-materialArray.push(new THREE.MeshBasicMaterial( { map: texture_up }));
-materialArray.push(new THREE.MeshBasicMaterial( { map: texture_dn }));
-materialArray.push(new THREE.MeshBasicMaterial( { map: texture_rt }));
-materialArray.push(new THREE.MeshBasicMaterial( { map: texture_lf }));
+    textureLoader = new TextureLoader();
+    let texture_ft = textureLoader.load('skybox/bay_ft.jpg');
+    let texture_bk = textureLoader.load('skybox/bay_bk.jpg');
+    let texture_up = textureLoader.load('skybox/bay_up.jpg');
+    let texture_dn = textureLoader.load('skybox/bay_dn.jpg');
+    let texture_rt = textureLoader.load('skybox/bay_rt.jpg');
+    let texture_lf = textureLoader.load('skybox/bay_lf.jpg');
+    
+    materialArray.push(new THREE.MeshBasicMaterial( { map: texture_ft }));
+    materialArray.push(new THREE.MeshBasicMaterial( { map: texture_bk }));
+    materialArray.push(new THREE.MeshBasicMaterial( { map: texture_up }));
+    materialArray.push(new THREE.MeshBasicMaterial( { map: texture_dn }));
+    materialArray.push(new THREE.MeshBasicMaterial( { map: texture_rt }));
+    materialArray.push(new THREE.MeshBasicMaterial( { map: texture_lf }));
    
-for (let i = 0; i < 6; i++)
-  materialArray[i].side = THREE.BackSide;
+    for (let i = 0; i < 6; i++)
+    materialArray[i].side = THREE.BackSide;
    
-let skyboxGeo = new THREE.BoxGeometry( 10000, 10000, 10000);
-const skybox = new THREE.Mesh( skyboxGeo, materialArray );
-scene.add( skybox );
+    let skyboxGeo = new THREE.BoxGeometry( 10000, 10000, 10000);
+    const skybox = new THREE.Mesh( skyboxGeo, materialArray );
+    scene.add( skybox );
 }
 
 function setInputKeys(){
@@ -294,8 +284,6 @@ function setInputKeys(){
     document.addEventListener( 'keyup', onKeyUp );
 }
 
-let floor;
-
 function addFloor(){
     raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, -20, 0 ), 0, 10 );
 
@@ -307,6 +295,7 @@ function addFloor(){
     floor = new THREE.Mesh( floorGeometry, floorMaterial );
     floor.layers.enable(1);
     scene.add( floor );
+    initializeNavmesh(floor);
     
 
 }
@@ -391,56 +380,6 @@ function updateFPS()
 
     prevTime = time;
 }
-
-function onSelectStartControllerOne()
-{
-
-}
-
-function onSelectStartControllerTwo()
-{
-    
-}
-
-function onSelectEndControllerOne()
-{
-    TeleportPlayer(1);
-}
-function onSelectEndControllerTwo()
-{
-    TeleportPlayer(2);
-}
-let raycastStart=new THREE.Vector3();
-let raycastDir=new THREE.Vector3();
-
-function TeleportPlayer(Controller)
-{
-    if(Controller==1)
-    {
-        controller1.getWorldPosition(raycastStart);
-        controller1.getWorldDirection(raycastDir);
-    }
-    else if(Controller==2)
-    {
-        controller2.getWorldPosition(raycastStart);
-        controller2.getWorldDirection(raycastDir);
-    }
-
-    raycastDir.multiplyScalar(-1);
-    
-    VRRaycaster.set(raycastStart,raycastDir,100,100);
-   
-    //visualise
-    // scene.add(new THREE.ArrowHelper(VRRaycaster.ray.direction, VRRaycaster.ray.origin, 300, 0xff0000));
-
-    const VRRaycastIntersects = VRRaycaster.intersectObject(floor);
-    console.log(VRRaycastIntersects);
-    if(VRRaycastIntersects[0])
-    {
-        Player.position.set(VRRaycastIntersects[0].point.x, Player.position.y,VRRaycastIntersects[0].point.z);
-    }
-}
-
 
 const animate = () => {
     renderer.setAnimationLoop(animate);
