@@ -11,11 +11,13 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader"
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader'
 //import * as CANNON from "cannon-es"
 import * as dat from 'dat.gui';
+import { ARButton } from 'three/examples/jsm/webxr/ARButton.js';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
 import * as CANNON from 'cannon-es';
 import CannonDebugger from 'cannon-es-debugger';
 import { SetupVRControllers } from './VRControl';
-import { initializeNavmesh } from './Navmesh';
+import { FindClosestPoint, FindPath, getClosestNode, initializeNavmesh, LoadNavmesh } from './Navmesh';
+import { LoadModel } from './LoadModel';
 
 /* Define DOM elements */
 const rootElement = document.querySelector('#root');
@@ -151,7 +153,7 @@ const initThreeJS = async () => {
     renderer = SceneSetup.renderer({ antialias: true });
 
     //add VRButton to scene
-    document.body.appendChild( VRButton.createButton(renderer));
+    document.body.appendChild( ARButton.createButton(renderer));
 
     scene.add(Player);
 
@@ -178,9 +180,9 @@ const initThreeJS = async () => {
     //makeTextPanel();
     
     light();
-    skybox();
+    //skybox();
     addFloor();
-    SetupVRControllers(Player,scene,renderer,SceneSetup,floor);
+    //SetupVRControllers(Player,scene,renderer,SceneSetup,floor);
     
     
 const listener = new THREE.AudioListener();
@@ -296,6 +298,10 @@ function addFloor(){
     floor.layers.enable(1);
     scene.add( floor );
     initializeNavmesh(floor);
+ //   Player.position.set(FindClosestPoint(Player.position).x,1000,0);
+ //   FindPath(Player.position,new THREE.Vector3(20,0,10));
+ //   LoadModel('F.glb',new THREE.Vector3(0,0,0),new THREE.Vector3(5,5,5),scene);
+ //LoadNavmesh('Navmesh.gltf',new THREE.Vector3(0,0,0),new THREE.Vector3(5,5,5),scene);
     
 
 }
@@ -388,6 +394,7 @@ const animate = () => {
    
     /* Update controls when damping */
     controls.update();
+    //FindPath(new THREE.Vector3(0,0,0), new THREE.Vector3(1,1,1));
 
     /* Render scene */
     renderer.render(scene, camera);
